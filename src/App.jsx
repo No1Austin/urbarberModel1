@@ -45,6 +45,9 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+
+
+
   useEffect(() => {
   const fetchBookings = async () => {
     if (!user) return;
@@ -226,34 +229,74 @@ export default function App() {
     }
 
     const startLocal = new Date(`${form.date}T${form.time}`);
-    const endLocal = new Date(startLocal.getTime() + 45 * 60 * 1000);
+const endLocal = new Date(startLocal.getTime() + 45 * 60 * 1000);
 
-    setSubmitting(true);
+setSubmitting(true);
 
-    try {
-      const webhook =
-        "https://script.google.com/macros/s/AKfycbyw3Ln84xL0fGm5b4RKlzllMXvO6QVSyQWp7OiLO5wvOFtbgddBmpaDVIuLRkr0lTVe9g/exec";
+try {
+  const token = localStorage.getItem("token");
 
-      const res = await fetch(webhook, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          userId: user.id,
-          fullName: form.fullName,
-          gender: form.gender,
-          email: form.email,
-          phone: form.phone,
-          service: form.service,
-          start: startLocal.toISOString(),
-          end: endLocal.toISOString(),
-          inHome: form.inHome,
-          location: form.inHome ? form.location : "Urbarber Barbershop",
-          notes: form.notes,
-          price,
-          depositOption: form.depositOption,
-          depositAmount: form.depositOption === "pay" ? depositAmount : 0,
-        }),
-      });
+  const res = await fetch(
+    "https://urbarbermodel1.onrender.com/api/bookings",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+
+      body: JSON.stringify({
+        fullName: form.fullName,
+        gender: form.gender,
+        email: form.email,
+        phone: form.phone,
+        service: form.service,
+
+        date: form.date,
+        time: form.time,
+
+        start: startLocal.toISOString(),
+        end: endLocal.toISOString(),
+
+        inHome: form.inHome,
+        location: form.inHome
+          ? form.location
+          : "Urbarber Barbershop",
+
+        notes: form.notes,
+
+        price,
+
+        depositOption: form.depositOption,
+        depositAmount:
+          form.depositOption === "pay"
+            ? depositAmount
+            : 0,
+
+        status: "pending", // waits for admin approval
+      }),
+    }
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Booking failed");
+  }
+
+  alert(
+    "Booking submitted successfully. Waiting for admin approval."
+  );
+
+} catch (error) {
+  console.error(error);
+
+  alert(
+    error.message || "Could not submit booking."
+  );
+} finally {
+  setSubmitting(false);
+}
 
       const data = await res.json().catch(() => ({}));
 
