@@ -7,10 +7,18 @@ exports.createBooking = async (req, res) => {
       customerName: req.user.name,
       customerEmail: req.user.email.toLowerCase(),
       customerPhone: req.user.phone,
+
       ...req.body,
+
+      // New customer bookings should wait for admin approval
+      status: "pending",
+      bookedByAdmin: false,
     });
 
-    res.status(201).json(booking);
+    res.status(201).json({
+      message: "Booking request submitted. Waiting for admin approval.",
+      booking,
+    });
   } catch (error) {
     res.status(500).json({
       message: "Booking failed",
