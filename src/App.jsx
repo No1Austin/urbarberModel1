@@ -23,10 +23,6 @@ export default function App() {
     ? window.location.pathname.split("/reset-password/")[1]
     : null;
 
-  if (resetToken) {
-    return <ResetPassword token={resetToken} />;
-  }
-
   const API_URL = "https://urbarbermodel1.onrender.com/api/auth";
 
   const [user, setUser] = useState(() => {
@@ -326,6 +322,11 @@ export default function App() {
       </div>
     );
   };
+
+
+  if (resetToken) {
+    return <ResetPassword token={resetToken} />;
+  }
 
   return (
     <div className="w-full min-h-screen bg-[#3b2f2f] text-white flex flex-col overflow-x-hidden">

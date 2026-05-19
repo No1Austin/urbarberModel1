@@ -63,13 +63,68 @@ router.post("/bookings", protect, adminOnly, async (req, res) => {
       location: inHome ? location : "Urbarber Barbershop",
       notes,
       bookedByAdmin: true,
-      status: "booked",
+      status: "approved",
     });
 
     res.status(201).json(booking);
   } catch (error) {
     res.status(500).json({
       message: "Admin booking failed",
+      error: error.message,
+    });
+  }
+});
+
+router.patch("/bookings/:id/approve", protect, adminOnly, async (req, res) => {
+  try {
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status: "approved" },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    res.json({
+      message: "Booking approved. Confirmation email should be sent here next.",
+      booking,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Could not approve booking",
+      error: error.message,
+    });
+  }
+});
+
+router.patch("/bookings/:id/rebook", protect, adminOnly, async (req, res) => {
+  try {
+    const { date, time, notes } = req.body;
+
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      {
+        date,
+        time,
+        notes,
+        status: "rebooked",
+      },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    res.json({
+      message: "Booking rebooked successfully.",
+      booking,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Could not rebook booking",
       error: error.message,
     });
   }
@@ -108,13 +163,16 @@ router.patch("/bookings/:id/approve-points", protect, adminOnly, async (req, res
       return res.status(400).json({ message: "Points already approved" });
     }
 
+    if (booking.status !== "completed") {
+      return res.status(400).json({
+        message: "Complete the booking before approving points.",
+      });
+    }
+
     const pointsToAdd = 1.5;
 
     const user = await User.findOne({
-      $or: [
-        { _id: booking.userId },
-        { email: booking.customerEmail },
-      ],
+      $or: [{ _id: booking.userId }, { email: booking.customerEmail }],
     });
 
     if (!user) {
@@ -127,7 +185,6 @@ router.patch("/bookings/:id/approve-points", protect, adminOnly, async (req, res
     await user.save();
 
     booking.pointsApproved = true;
-    booking.status = "completed";
     await booking.save();
 
     res.json({
@@ -166,6 +223,23 @@ router.patch("/bookings/:id/cancel", protect, adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Could not cancel booking",
+      error: error.message,
+    });
+  }
+});
+
+router.delete("/bookings/:id", protect, adminOnly, async (req, res) => {
+  try {
+    const booking = await Booking.findByIdAndDelete(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    res.json({ message: "Booking deleted successfully." });
+  } catch (error) {
+    res.status(500).json({
+      message: "Could not delete booking",
       error: error.message,
     });
   }
