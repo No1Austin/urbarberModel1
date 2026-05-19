@@ -29,20 +29,20 @@ exports.createBooking = async (req, res) => {
 
 exports.getBookings = async (req, res) => {
   try {
-    const bookings =
-      req.user.role === "admin"
-        ? await Booking.find().sort({ createdAt: -1 })
-        : await Booking.find({
-            $or: [
-              { userId: req.user._id },
-              { customerEmail: req.user.email.toLowerCase() },
-            ],
-          }).sort({ createdAt: -1 });
+    let bookings;
+
+    if (req.user.role === "admin") {
+      bookings = await Booking.find().sort({ createdAt: -1 });
+    } else {
+      bookings = await Booking.find({ userId: req.user._id }).sort({
+        createdAt: -1,
+      });
+    }
 
     res.json(bookings);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to get bookings",
+      message: "Could not fetch bookings",
       error: error.message,
     });
   }
@@ -50,16 +50,25 @@ exports.getBookings = async (req, res) => {
 
 exports.updateBooking = async (req, res) => {
   try {
-    const booking = await Booking.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const oldStatus = booking.status;
+
+    Object.assign(booking, req.body);
+    await booking.save();
+
+    if (oldStatus !== "approved" && booking.status === "approved") {
+      // send confirmation email here
+    }
 
     res.json(booking);
   } catch (error) {
     res.status(500).json({
-      message: "Update failed",
+      message: "Could not update booking",
       error: error.message,
     });
   }

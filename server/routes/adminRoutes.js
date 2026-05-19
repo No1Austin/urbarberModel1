@@ -3,6 +3,7 @@ const Booking = require("../models/Booking");
 const User = require("../models/User");
 const { protect } = require("../middleware/authMiddleware");
 
+
 const router = express.Router();
 
 const adminOnly = (req, res, next) => {
@@ -207,22 +208,46 @@ router.patch("/bookings/:id/approve-points", protect, adminOnly, async (req, res
   }
 });
 
-router.patch("/bookings/:id/cancel", protect, adminOnly, async (req, res) => {
+const sendEmail = require("../utils/sendEmail");
+
+router.patch("/bookings/:id/approve", protect, adminOnly, async (req, res) => {
   try {
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
-      { status: "cancelled" },
+      { status: "approved" },
       { new: true }
     );
 
     if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
+      return res.status(404).json({
+        message: "Booking not found",
+      });
     }
 
-    res.json(booking);
+    await sendEmail({
+      to: booking.customerEmail,
+      subject: "Booking Approved - Urbarber",
+      text: `
+Hi ${booking.customerName},
+
+Your booking has been approved.
+
+Service: ${booking.service}
+Date: ${booking.date}
+Time: ${booking.time}
+
+Thanks,
+Urbarber
+`,
+    });
+
+    res.json({
+      message: "Booking approved and email sent",
+      booking,
+    });
   } catch (error) {
     res.status(500).json({
-      message: "Could not cancel booking",
+      message: "Could not approve booking",
       error: error.message,
     });
   }
