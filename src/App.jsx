@@ -275,7 +275,7 @@ export default function App() {
 
         setNotice({
           type: "success",
-          message: "Successfully booked! A confirmation email has been sent.",
+          message: "Booking request submitted. Waiting for admin approval.",
         });
 
         setForm((f) => ({ ...f, notes: "" }));

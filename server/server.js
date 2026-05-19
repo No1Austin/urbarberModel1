@@ -22,6 +22,12 @@ app.use(
   })
 );
 
+app.get("/api/admin/bookings", async (req, res) => {
+  const bookings = await Booking.find().sort({ createdAt: -1 });
+  res.json(bookings);
+});
+
+
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
