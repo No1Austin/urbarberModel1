@@ -22,26 +22,47 @@ export default function Login({
     }));
   };
 
-  const login = async (e) => {
-    e.preventDefault();
+const login = async (e) => {
+  e.preventDefault();
 
-    setLoading(true);
-    setError("");
+  setLoading(true);
+  setError("");
 
-    try {
-      const res = await axios.post("https://urbarber-model1.vercel.app/api/auth/login", form);
+  try {
+    const API_URL = import.meta.env.VITE_API_URL;
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+    const res = await axios.post(
+      `${API_URL}/api/auth/login`,
+      form
+    );
 
-      setUser(res.data.user);
-      setShowLogin(false);
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    localStorage.setItem(
+      "token",
+      res.data.token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(res.data.user)
+    );
+
+    setUser(res.data.user);
+
+    setShowLogin(false);
+
+  } catch (err) {
+
+    setError(
+      err.response?.data?.message ||
+      "Login failed"
+    );
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
