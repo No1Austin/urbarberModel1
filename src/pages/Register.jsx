@@ -27,7 +27,7 @@ export default function Register({ setUser, setShowRegister }) {
 
     try {
       const res = await axios.post(
-        "https://urbarberdesign-1.onrender.com/api/auth/register",
+        "https://urbarber-model1.vercel.app/api/auth/register",
         form
       );
 

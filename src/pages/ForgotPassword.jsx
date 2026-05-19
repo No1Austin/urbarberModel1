@@ -15,7 +15,7 @@ export default function ForgotPassword({ setShowForgotPassword }) {
 
     try {
       const res = await axios.post(
-        "https://urbarberdesign-1.onrender.com/api/auth/forgot-password",
+        "https://urbarber-model1.vercel.app/api/auth/forgot-password",
         { email }
       );
 

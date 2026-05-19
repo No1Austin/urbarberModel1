@@ -27,7 +27,7 @@ export default function App() {
     return <ResetPassword token={resetToken} />;
   }
 
-  const API_URL = "https://urbarberdesign-1.onrender.com/api/auth";
+  const API_URL = "https://urbarber-model1.vercel.app/api/auth";
 
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
@@ -57,7 +57,7 @@ export default function App() {
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        "https://urbarberdesign-1.onrender.com/api/bookings/my-bookings",
+        "https://urbarber-model1.vercel.app/api/bookings/my-bookings",
         {
           headers: {
             Authorization: `Bearer ${token}`,

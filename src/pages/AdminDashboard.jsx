@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_URL = "https://urbarberdesign-1.onrender.com/api/admin";
+const API_URL = "https://urbarber-model1.vercel.app/api/admin";
 
 export default function AdminDashboard({ onUserUpdate }) {
   const [bookings, setBookings] = useState([]);

@@ -29,7 +29,7 @@ export default function Login({
     setError("");
 
     try {
-      const res = await axios.post("https://urbarberdesign-1.onrender.com/api/auth/login", form);
+      const res = await axios.post("https://urbarber-model1.vercel.app/api/auth/login", form);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));

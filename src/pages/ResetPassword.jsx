@@ -13,7 +13,7 @@ export default function ResetPassword({ token }) {
 
     try {
       const res = await axios.post(
-        `https://urbarberdesign-1.onrender.com/api/auth/reset-password/${token}`,
+        `https://urbarber-model1.vercel.app/api/auth/reset-password/${token}`,
         { password }
       );
 

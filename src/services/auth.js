@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://urbarberdesign-1.onrender.com/api/auth";
+const API_URL = "https://urbarber-model1.vercel.app/api/auth";
 
 export const registerUser = async (userData) => {
   const res = await axios.post(`${API_URL}/register`, userData);
