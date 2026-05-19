@@ -23,7 +23,8 @@ export default function App() {
     ? window.location.pathname.split("/reset-password/")[1]
     : null;
 
-  const API_URL = "https://urbarbermodel1.onrender.com/api/auth";
+  const AUTH_API_URL = "https://urbarbermodel1.onrender.com/api/auth";
+  const BOOKINGS_API_URL = "https://urbarbermodel1.onrender.com/api/bookings";
 
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
@@ -40,38 +41,7 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState(null);
 
-  const [bookingHistory, setBookingHistory] = useState(() => {
-    const saved = localStorage.getItem("bookingHistory");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-
-
-
-  useEffect(() => {
-  const fetchBookings = async () => {
-    if (!user) return;
-
-    try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get(
-        "https://urbarbermodel1.onrender.com/api/bookings/my-bookings",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setBookingHistory(res.data);
-    } catch (err) {
-      console.log("Could not fetch bookings:", err);
-    }
-  };
-
-  fetchBookings();
-}, [user]);
+  const [bookingHistory, setBookingHistory] = useState([]);
 
   const [authForm, setAuthForm] = useState({
     name: "",
@@ -140,6 +110,28 @@ export default function App() {
     },
   ];
 
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!user) return;
+
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(`${BOOKINGS_API_URL}/my-bookings`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setBookingHistory(res.data);
+      } catch (err) {
+        console.log("Could not fetch bookings:", err);
+      }
+    };
+
+    fetchBookings();
+  }, [user]);
+
   const handleAuthChange = (e) => {
     const { name, value } = e.target;
     setAuthForm((f) => ({ ...f, [name]: value }));
@@ -160,7 +152,7 @@ export default function App() {
             }
           : authForm;
 
-      const res = await axios.post(`${API_URL}${endpoint}`, payload);
+      const res = await axios.post(`${AUTH_API_URL}${endpoint}`, payload);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -205,13 +197,6 @@ export default function App() {
     }));
   };
 
-  const saveBookingHistory = (booking) => {
-  setBookingHistory((prev) => [
-    booking,
-    ...prev,
-  ]);
-};
-
   const handleBook = async () => {
     setNotice(null);
 
@@ -229,117 +214,59 @@ export default function App() {
     }
 
     const startLocal = new Date(`${form.date}T${form.time}`);
-const endLocal = new Date(startLocal.getTime() + 45 * 60 * 1000);
+    const endLocal = new Date(startLocal.getTime() + 45 * 60 * 1000);
 
-setSubmitting(true);
+    setSubmitting(true);
 
-try {
-  const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-  const res = await fetch(
-    "https://urbarbermodel1.onrender.com/api/bookings",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-
-      body: JSON.stringify({
-        fullName: form.fullName,
-        gender: form.gender,
-        email: form.email,
-        phone: form.phone,
-        service: form.service,
-
-        date: form.date,
-        time: form.time,
-
-        start: startLocal.toISOString(),
-        end: endLocal.toISOString(),
-
-        inHome: form.inHome,
-        location: form.inHome
-          ? form.location
-          : "Urbarber Barbershop",
-
-        notes: form.notes,
-
-        price,
-
-        depositOption: form.depositOption,
-        depositAmount:
-          form.depositOption === "pay"
-            ? depositAmount
-            : 0,
-
-        status: "pending", // waits for admin approval
-      }),
-    }
-  );
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.message || "Booking failed");
-  }
-
-  alert(
-    "Booking submitted successfully. Waiting for admin approval."
-  );
-
-} catch (error) {
-  console.error(error);
-
-  alert(
-    error.message || "Could not submit booking."
-  );
-} finally {
-  setSubmitting(false);
-}
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data.ok) {
-        const booking = {
-          id: Date.now(),
+      const res = await fetch(BOOKINGS_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          gender: form.gender,
+          email: form.email,
+          phone: form.phone,
           service: form.service,
           date: form.date,
           time: form.time,
+          start: startLocal.toISOString(),
+          end: endLocal.toISOString(),
+          inHome: form.inHome,
+          location: form.inHome ? form.location : "Urbarber Barbershop",
+          notes: form.notes,
           price,
-          status: "Booked",
-          deposit:
-            form.depositOption === "pay"
-              ? `$${depositAmount} deposit selected`
-              : "No deposit",
-        };
+          depositOption: form.depositOption,
+          depositAmount: form.depositOption === "pay" ? depositAmount : 0,
+          status: "pending",
+        }),
+      });
 
-        saveBookingHistory(booking);
+      const data = await res.json();
 
-        setNotice({
-          type: "success",
-          message: "Booking request submitted. Waiting for admin approval.",
-        });
-
-        setForm((f) => ({ ...f, notes: "" }));
-      } else if (data?.conflict) {
-        setNotice({
-          type: "error",
-          message:
-            data.message || "That time is already booked. Choose another time.",
-        });
-      } else {
-        setNotice({
-          type: "error",
-          message:
-            data?.message || "We couldn’t save your booking. Try again later.",
-        });
+      if (!res.ok) {
+        throw new Error(data.message || "Booking failed");
       }
+
+      setBookingHistory((prev) => [data.booking || data, ...prev]);
+
+      setNotice({
+        type: "success",
+        message: "Booking request submitted. Waiting for admin approval.",
+      });
+
+      setForm((f) => ({ ...f, notes: "" }));
     } catch (err) {
-      console.error("Webhook call failed:", err);
+      console.error("Booking failed:", err);
+
       setNotice({
         type: "error",
-        message: "Network error while saving your booking. Please try again.",
+        message: err.message || "Could not submit booking.",
       });
     } finally {
       setSubmitting(false);
@@ -365,7 +292,6 @@ try {
       </div>
     );
   };
-
 
   if (resetToken) {
     return <ResetPassword token={resetToken} />;
@@ -456,7 +382,6 @@ try {
 
           <div className="mt-4 p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161]">
             <div className="text-sm text-gray-300">Last Booking</div>
-
             {lastBooking ? (
               <div className="text-sm mt-1">
                 {lastBooking.service} — {lastBooking.date} at{" "}
@@ -465,33 +390,6 @@ try {
             ) : (
               <div className="text-sm mt-1">No booking yet</div>
             )}
-          </div>
-
-          <div className="mt-4">
-            <div className="font-semibold text-sm">Recent Bookings</div>
-            <div className="mt-2 space-y-2 max-h-48 overflow-auto">
-              {bookingHistory.length ? (
-                bookingHistory.map((b) => (
-                  <div
-                    key={b.id}
-                    className="p-3 rounded-2xl bg-[#3b2f2f] border border-[#7a6161] text-sm"
-                  >
-                    <div className="font-semibold">{b.service}</div>
-                    <div className="text-gray-300">
-                      {b.date} at {b.time}
-                    </div>
-                    <div className="text-gray-300">
-                      ${b.price} • {b.status}
-                    </div>
-                    <div className="text-gray-400 text-xs">{b.deposit}</div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-sm text-gray-300">
-                  Your bookings will appear here.
-                </div>
-              )}
-            </div>
           </div>
 
           <button
@@ -547,75 +445,79 @@ try {
 
           <div className="rounded-3xl overflow-hidden shadow-lg border border-[#7a6161] min-h-[420px]">
             <img
-  src="/barbing.jpg"
-  alt="Barber at work"
-  className="w-full h-full object-cover"
-/>
+              src="/barbing.jpg"
+              alt="Barber at work"
+              className="w-full h-full object-cover"
+            />
           </div>
         </section>
 
         <section
-  id="services"
-  className="w-full bg-[#4a3a3a] border-y border-[#6b5555]"
->
-  <div className="w-full px-6 py-20">
-    <div className="text-center max-w-2xl mx-auto">
-      <p className="text-sm uppercase tracking-[0.3em] text-gray-300">
-        Our Services
-      </p>
-      <h2 className="mt-3 text-3xl md:text-5xl font-extrabold">
-        Choose Your Look
-      </h2>
-      <p className="mt-4 text-gray-200">
-        Clean cuts, sharp details, and professional grooming tailored to your style.
-      </p>
-    </div>
-
-    <div className="mt-12 grid md:grid-cols-3 gap-8">
-      {SERVICES.map((s) => (
-        <div
-          key={s.name}
-          className="group rounded-3xl overflow-hidden border border-[#7a6161] bg-[#5c4646] shadow-xl hover:-translate-y-2 transition duration-300"
+          id="services"
+          className="w-full bg-[#4a3a3a] border-y border-[#6b5555]"
         >
-          <div className="relative h-72 overflow-hidden">
-            <img
-              src={s.img}
-              alt={s.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-            />
-
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-            <div className="absolute top-4 right-4 px-4 py-2 rounded-full bg-white text-black text-sm font-bold shadow">
-              {s.price}
+          <div className="w-full px-6 py-20">
+            <div className="text-center max-w-2xl mx-auto">
+              <p className="text-sm uppercase tracking-[0.3em] text-gray-300">
+                Our Services
+              </p>
+              <h2 className="mt-3 text-3xl md:text-5xl font-extrabold">
+                Choose Your Look
+              </h2>
+              <p className="mt-4 text-gray-200">
+                Clean cuts, sharp details, and professional grooming tailored to
+                your style.
+              </p>
             </div>
 
-            <div className="absolute bottom-5 left-5 right-5">
-              <h3 className="text-2xl font-bold">{s.name}</h3>
-              <p className="mt-2 text-sm text-gray-200">{s.desc}</p>
+            <div className="mt-12 grid md:grid-cols-3 gap-8">
+              {SERVICES.map((s) => (
+                <div
+                  key={s.name}
+                  className="group rounded-3xl overflow-hidden border border-[#7a6161] bg-[#5c4646] shadow-xl hover:-translate-y-2 transition duration-300"
+                >
+                  <div className="relative h-72 overflow-hidden">
+                    <img
+                      src={s.img}
+                      alt={s.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                    />
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                    <div className="absolute top-4 right-4 px-4 py-2 rounded-full bg-white text-black text-sm font-bold shadow">
+                      {s.price}
+                    </div>
+
+                    <div className="absolute bottom-5 left-5 right-5">
+                      <h3 className="text-2xl font-bold">{s.name}</h3>
+                      <p className="mt-2 text-sm text-gray-200">{s.desc}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-5 flex items-center justify-between">
+                    <span className="text-sm text-gray-300">
+                      Approx. 45 mins
+                    </span>
+
+                    <button
+                      onClick={() => {
+                        setForm((f) => ({ ...f, service: s.name }));
+                        document
+                          .getElementById("booking")
+                          ?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="px-4 py-2 rounded-xl bg-black text-white text-sm hover:bg-neutral-800 transition"
+                    >
+                      Book this
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+        </section>
 
-          <div className="p-5 flex items-center justify-between">
-            <span className="text-sm text-gray-300">Approx. 45 mins</span>
-
-            <button
-              onClick={() => {
-                setForm((f) => ({ ...f, service: s.name }));
-                document
-                  .getElementById("booking")
-                  ?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="px-4 py-2 rounded-xl bg-black text-white text-sm hover:bg-neutral-800 transition"
-            >
-              Book this
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
         <section id="pricing" className="w-full px-6 py-14">
           <h2 className="text-2xl font-bold">Pricing</h2>
 
@@ -660,8 +562,8 @@ try {
             <h2 className="text-2xl font-bold">Book an appointment</h2>
 
             <p className="mt-2 text-gray-200 text-sm">
-              Login or create an account before booking. Your wallet will track
-              your points and booking history.
+              Login or create an account before booking. Your booking will wait
+              for admin approval.
             </p>
 
             {!user ? (
@@ -927,9 +829,7 @@ try {
                       </div>
 
                       <div className="p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161] text-sm text-gray-200">
-                        Coming next: admin approval, automatic points, full
-                        booking history, referral rewards, and free haircut
-                        redemption.
+                        Customer bookings now wait for admin approval.
                       </div>
                     </div>
                   </div>

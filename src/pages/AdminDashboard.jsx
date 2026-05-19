@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
 const API_URL = "https://urbarbermodel1.onrender.com/api/bookings";
@@ -29,9 +29,16 @@ export default function AdminDashboard({ onUserUpdate }) {
     },
   };
 
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     setLoading(true);
     setNotice(null);
+
+    const token = localStorage.getItem("token");
+    const authHeaders = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
 
     try {
       const res = await axios.get(API_URL, authHeaders);
@@ -44,11 +51,11 @@ export default function AdminDashboard({ onUserUpdate }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadBookings();
-  }, []);
+  }, [loadBookings]);
 
   const handleAdminBookingChange = (e) => {
     const { name, value, type, checked } = e.target;
