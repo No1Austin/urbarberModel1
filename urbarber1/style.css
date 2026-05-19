@@ -1,0 +1,234 @@
+body{
+    background-color: #000000;
+}
+.custom-search {
+    max-width: 500px; /* Limits width */
+    height: 50px; /* Increases height */
+    font-size: 18px; /* Larger text */
+    border-radius: 10px; /* Rounded corners */
+    border: 2px solid #ffffff; /* Custom border color */
+    padding: 10px 15px; /* Better spacing */
+    flex-grow: 1; /* Allows it to expand */
+}
+/* Extra small devices */
+@media (max-width: 576px) { /* ... */ } 
+/* Small devices (landscape phones, 576px and up)  */
+   @media (min-width: 576px) and (max-width: 768px) { /* ... */ } 
+/* Medium devices (tablets, 768px and up)  */
+   @media (min-width: 768px) and (max-width: 992px)  { /* ... */ } 
+/* Large devices (desktops, 992px and up)  */
+   @media (min-width: 992px) and (max-width: 1200px)  { /* ... */ } 
+/* Extra large devices (large desktops, 1200px and up)  */
+   @media (min-width: 1200px) { /* ... */ } 
+
+.custom-button {
+    height: 50px; /* Match search bar height */
+    font-size: 18px; /* Bigger button text */
+    border-radius: 10px; /* Rounded corners */
+    background-color: #00b39b; /* Custom background */
+    color: white; /* White text */
+    border: none; /* Remove default border */
+}
+.searchbar input{
+    height: 50px; /* Match search bar height */
+    font-size: 18px; /* Bigger button text */
+    border-radius: 10px; /* Rounded corners */
+    padding-left: 10px;
+    color: rgb(78, 78, 78); /* White text */
+    border: none
+
+}
+
+.custom-button:hover {
+    background-color: #008a76; /* Darker hover effect */
+}
+
+.navbar {
+    padding-left: 40px;
+    display: flex;
+   
+    justify-content: space-between; /* Aligns content properly */
+    align-items: center; /* Centers items vertically */
+    background-color: #161718;
+}
+.searchbar{
+  
+    justify-content: right;
+    padding-left: 300px;
+}
+.navbar h1 {
+    max-width: 5px;
+}
+.navbar-brand{
+    padding-top: 1%;
+}
+
+.d-flex {
+    display: flex; /* Ensures input and button are side by side */
+    align-items: center; /* Aligns them properly */
+    gap: 10px; /* Adds space between input and button */
+    width: 100%; /* Ensures it takes full space */
+}
+.container-fluid {
+    align-items: j;
+    background:  #161718;
+}
+.searchbar img{
+    width: 30px;
+    height: 30px;
+
+}
+.searchbar button{
+  border: #161718;
+    color: #ffffff;
+    background: #161718;
+
+}
+.row {
+    position: absolute;
+    color: #ffffff;
+    display: flex;
+ /* Centers the menu */
+    
+}
+
+.row ul {
+    display: flex;
+    padding-left: 100%;
+    margin: 0;
+    list-style: none;
+}
+
+.row li {
+padding-left: 25px;
+    font-weight:lighter;
+    font-family:  Tahoma, sans-serif;
+    padding-top: 150px;
+    text-align: center;
+    
+}
+.overlay{
+   
+    justify-content: center;
+    display: flex;
+  }
+.containerone img{
+    position: relative;
+    max-width: 100%;
+}
+
+.overlayer{
+    margin-top: 15%;
+    justify-items: center;
+    position:absolute
+}
+.overlayer h2{
+    background-color: #16171893;
+    color: #ffffff;
+    font-size: xx-large;
+}
+.overlay p{
+   text-align: center;
+    font-family: 'Playfair Display', 'Arial';
+    font-size: 50px;
+    color: #ffffff;
+    background-color: #16171893;
+}
+.overlayer button{
+    color: #000000;
+    border: none;
+    font-size: 20px;
+    padding: 20px 60px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.build img {
+    width: 99%;
+    
+}
+.build h1{
+    font-size: 50px;
+    padding-left: 20px;
+}
+
+.build p{
+    color:rgb(170, 170, 170) ;
+    padding-left: 22px;
+}
+.overlayer:hover{
+    transition: transform 0.3s ease-in-out;
+}
+.overlayer:hover{
+    transform: scale(1.1);
+}
+.col-md-4 img {
+    transition: transform 0.3s ease-in-out;
+}
+
+.col-md-4 img:hover {
+    transform: scale(1.1); /* Slight zoom effect */
+}
+.beforefooter {
+    display: flex;  /* Enables flexbox */
+     /* Corrected syntax */
+    align-items: center; /* Aligns items vertically */
+    margin-left: 170px;
+    padding-left: ;
+    margin-bottom: 75px;
+    margin-top: 600px;
+    width: 1000px;
+    height: 300px;
+    background-color: #1b1b1b;
+}
+.beforefooter .row{ 
+    padding-left: 200px;
+    gap: 60px; /* Adjust the spacing between items */
+}
+
+.beforefooter img{
+    padding-left: 50px;
+    padding-top:0px !important;
+    margin-top:  50px;
+}
+
+
+#openForm {
+    justify-items: center;
+margin-top: 20%; 
+margin-left: 6%;
+    font-size: 18px; /* Increase text size */
+    font-weight: bold; /* Make text bold */
+    padding: 12px 30px; /* Add padding */
+    border-radius: 8px; /* Smooth rounded edges */
+    border: 2px solid #ffffff; /* Bootstrap secondary color */
+    color: #ffffff; /* Button text color */
+    background: transparent; /* Transparent background */
+}
+
+
+.footer {
+    background-color: #161718;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.social-icons a {
+    color: #ffffff;
+    font-size: 24px;
+    transition: color 0.3s ease-in-out;
+}
+
+.social-icons a:hover {
+    color: #00b39b; /* Changes color on hover */
+}
+
+.hr{
+    margin-top: 100px;
+}

@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# build output
+dist/
+.vercel/
+
+# env / secrets
+.env*
+*.local
+
+# OS junk
+.DS_Store
+Thumbs.db
