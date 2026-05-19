@@ -15,13 +15,14 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://urbarber.app",
+      "https://urbarber-model1.vercel.app",
     ],
-    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.use(express.json());
 
+app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 app.use("/api/bookings", bookingRoutes);
