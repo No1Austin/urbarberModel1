@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
@@ -11,24 +10,16 @@ const passwordRoutes = require("./routes/passwordRoutes");
 
 const app = express();
 
+app.use(express.json());
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://urbarber-model1.vercel.app",
-    ],
+    origin: ["http://localhost:5173", "https://urbarber-model1.vercel.app"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-app.get("/api/admin/bookings", async (req, res) => {
-  const bookings = await Booking.find().sort({ createdAt: -1 });
-  res.json(bookings);
-});
-
-
-app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 app.use("/api/bookings", bookingRoutes);
@@ -44,7 +35,6 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
-
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
