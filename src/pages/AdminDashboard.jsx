@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
-const API_URL = "https://urbarbermodel1.onrender.com/api/bookings";
+const BOOKINGS_API_URL = "https://urbarbermodel1.onrender.com/api/bookings";
+const ADMIN_API_URL = "https://urbarbermodel1.onrender.com/api/admin";
 
 export default function AdminDashboard({ onUserUpdate }) {
   const [bookings, setBookings] = useState([]);
@@ -21,27 +22,22 @@ export default function AdminDashboard({ onUserUpdate }) {
     notes: "",
   });
 
-  const token = localStorage.getItem("token");
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
 
-  const authHeaders = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
   };
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
     setNotice(null);
 
-    const token = localStorage.getItem("token");
-    const authHeaders = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
     try {
-      const res = await axios.get(API_URL, authHeaders);
+      const res = await axios.get(BOOKINGS_API_URL, getAuthHeaders());
       setBookings(res.data);
     } catch (error) {
       setNotice({
@@ -60,8 +56,8 @@ export default function AdminDashboard({ onUserUpdate }) {
   const handleAdminBookingChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    setAdminBooking((f) => ({
-      ...f,
+    setAdminBooking((form) => ({
+      ...form,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
@@ -71,13 +67,13 @@ export default function AdminDashboard({ onUserUpdate }) {
 
     try {
       await axios.post(
-        API_URL,
+        BOOKINGS_API_URL,
         {
           ...adminBooking,
           status: "approved",
           bookedByAdmin: true,
         },
-        authHeaders
+        getAuthHeaders()
       );
 
       setNotice({
@@ -110,9 +106,9 @@ export default function AdminDashboard({ onUserUpdate }) {
   const approveBooking = async (bookingId) => {
     try {
       await axios.patch(
-        `${API_URL}/${bookingId}`,
-        { status: "approved" },
-        authHeaders
+        `${ADMIN_API_URL}/bookings/${bookingId}/approve`,
+        {},
+        getAuthHeaders()
       );
 
       setNotice({
@@ -132,10 +128,15 @@ export default function AdminDashboard({ onUserUpdate }) {
   const completeBooking = async (bookingId) => {
     try {
       await axios.patch(
-        `${API_URL}/${bookingId}`,
-        { status: "completed" },
-        authHeaders
+        `${ADMIN_API_URL}/bookings/${bookingId}/complete`,
+        {},
+        getAuthHeaders()
       );
+
+      setNotice({
+        type: "success",
+        message: "Booking marked as completed.",
+      });
 
       loadBookings();
     } catch (error) {
@@ -146,13 +147,45 @@ export default function AdminDashboard({ onUserUpdate }) {
     }
   };
 
+  const approvePoints = async (bookingId) => {
+    try {
+      const res = await axios.patch(
+        `${ADMIN_API_URL}/bookings/${bookingId}/approve-points`,
+        {},
+        getAuthHeaders()
+      );
+
+      if (res.data.user) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        onUserUpdate?.(res.data.user);
+      }
+
+      setNotice({
+        type: "success",
+        message: "Customer points approved successfully.",
+      });
+
+      loadBookings();
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error.response?.data?.message || "Could not approve points.",
+      });
+    }
+  };
+
   const cancelBooking = async (bookingId) => {
     try {
       await axios.patch(
-        `${API_URL}/${bookingId}`,
-        { status: "cancelled" },
-        authHeaders
+        `${ADMIN_API_URL}/bookings/${bookingId}/cancel`,
+        {},
+        getAuthHeaders()
       );
+
+      setNotice({
+        type: "success",
+        message: "Booking cancelled successfully.",
+      });
 
       loadBookings();
     } catch (error) {
@@ -185,7 +218,7 @@ export default function AdminDashboard({ onUserUpdate }) {
           <h2 className="text-2xl font-bold">Admin Dashboard</h2>
           <p className="mt-2 text-gray-200 text-sm">
             Manage customer bookings, approve appointments, complete bookings,
-            and cancel bookings.
+            cancel bookings, and approve loyalty points.
           </p>
         </div>
 
@@ -241,8 +274,8 @@ export default function AdminDashboard({ onUserUpdate }) {
         <div className="lg:col-span-2 p-6 rounded-3xl border border-[#7a6161] bg-[#5c4646] overflow-x-auto">
           <h3 className="font-semibold text-lg">All Bookings</h3>
 
-          <div className="mt-4 min-w-[750px]">
-            <div className="grid grid-cols-7 gap-2 text-xs uppercase text-gray-300 border-b border-[#7a6161] pb-2">
+          <div className="mt-4 min-w-[1050px]">
+            <div className="grid grid-cols-[1.4fr_1fr_0.8fr_0.7fr_0.8fr_0.8fr_2.4fr] gap-2 text-xs uppercase text-gray-300 border-b border-[#7a6161] pb-2">
               <div>Customer</div>
               <div>Service</div>
               <div>Date</div>
@@ -256,10 +289,15 @@ export default function AdminDashboard({ onUserUpdate }) {
               <div className="py-6 text-sm text-gray-300">No bookings found.</div>
             ) : (
               bookings.map((booking) => (
-                <div key={booking._id} className="grid grid-cols-7 gap-2 text-sm py-3 border-b border-[#7a6161]">
+                <div
+                  key={booking._id}
+                  className="grid grid-cols-[1.4fr_1fr_0.8fr_0.7fr_0.8fr_0.8fr_2.4fr] gap-2 text-sm py-3 border-b border-[#7a6161] items-center"
+                >
                   <div>
                     <div className="font-semibold">{booking.customerName}</div>
-                    <div className="text-xs text-gray-300">{booking.customerEmail}</div>
+                    <div className="text-xs text-gray-300 break-all">
+                      {booking.customerEmail}
+                    </div>
                   </div>
 
                   <div>{booking.service}</div>
@@ -267,33 +305,56 @@ export default function AdminDashboard({ onUserUpdate }) {
                   <div>{booking.time}</div>
 
                   <div>
-                    <span className="px-2 py-1 rounded-full bg-[#3b2f2f] text-xs">
+                    <span className="px-2 py-1 rounded-full bg-[#3b2f2f] text-xs whitespace-nowrap">
                       {booking.status || "pending"}
                     </span>
                   </div>
 
                   <div>
                     {booking.pointsApproved ? (
-                      <span className="text-emerald-300">Approved</span>
+                      <span className="text-emerald-300 whitespace-nowrap">
+                        Approved
+                      </span>
                     ) : (
-                      <span className="text-gray-300">Pending</span>
+                      <span className="text-gray-300 whitespace-nowrap">
+                        Pending
+                      </span>
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {booking.status !== "approved" && (
-                      <button onClick={() => approveBooking(booking._id)} className="px-3 py-1 rounded-xl bg-emerald-700 text-white text-xs">
-                        Approve
+                  <div className="flex flex-nowrap gap-2 whitespace-nowrap overflow-x-auto">
+                    {booking.status !== "approved" &&
+                      booking.status !== "completed" &&
+                      booking.status !== "cancelled" && (
+                        <button onClick={() => approveBooking(booking._id)} className="px-3 py-1 rounded-xl bg-emerald-700 text-white text-xs">
+                          Approve
+                        </button>
+                      )}
+
+                    {booking.status !== "completed" &&
+                      booking.status !== "cancelled" && (
+                        <button onClick={() => completeBooking(booking._id)} className="px-3 py-1 rounded-xl bg-black text-white text-xs">
+                          Complete
+                        </button>
+                      )}
+
+                    <button
+                      onClick={() => approvePoints(booking._id)}
+                      disabled={booking.pointsApproved || booking.status !== "completed"}
+                      className={`px-3 py-1 rounded-xl text-xs ${
+                        booking.pointsApproved || booking.status !== "completed"
+                          ? "bg-[#7a6161] text-gray-300"
+                          : "bg-emerald-700 text-white"
+                      }`}
+                    >
+                      {booking.pointsApproved ? "Points Approved" : "Approve Points"}
+                    </button>
+
+                    {booking.status !== "cancelled" && (
+                      <button onClick={() => cancelBooking(booking._id)} className="px-3 py-1 rounded-xl bg-red-700 text-white text-xs">
+                        Cancel
                       </button>
                     )}
-
-                    <button onClick={() => completeBooking(booking._id)} className="px-3 py-1 rounded-xl bg-black text-white text-xs">
-                      Complete
-                    </button>
-
-                    <button onClick={() => cancelBooking(booking._id)} className="px-3 py-1 rounded-xl bg-red-700 text-white text-xs">
-                      Cancel
-                    </button>
                   </div>
                 </div>
               ))
