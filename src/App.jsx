@@ -861,11 +861,41 @@ export default function App() {
                         <div className="text-sm text-gray-300">
                           Last Booking
                         </div>
-                        <div className="text-sm mt-1">
-                          {lastBooking
-                            ? `${lastBooking.service} — ${lastBooking.date} at ${lastBooking.time}`
-                            : "No booking yet"}
-                        </div>
+                        <div className="text-sm mt-2">
+  <div className="font-medium">
+    {lastBooking.service}
+  </div>
+
+  <div className="text-gray-300">
+    {lastBooking.date} at {lastBooking.time}
+  </div>
+
+  <div className="mt-3">
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium ${
+        lastBooking.status === "approved"
+          ? "bg-emerald-700 text-white"
+          : lastBooking.status === "cancelled"
+          ? "bg-red-700 text-white"
+          : lastBooking.status === "completed"
+          ? "bg-blue-700 text-white"
+          : lastBooking.status === "rebooked"
+          ? "bg-yellow-600 text-black"
+          : "bg-orange-600 text-white"
+      }`}
+    >
+      {lastBooking.status === "approved"
+        ? "✅ Booking Approved"
+        : lastBooking.status === "cancelled"
+        ? "❌ Booking Cancelled"
+        : lastBooking.status === "completed"
+        ? "🏁 Completed"
+        : lastBooking.status === "rebooked"
+        ? "🔄 Rebooked"
+        : "⏳ Waiting for Admin Approval"}
+    </span>
+  </div>
+</div>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161] text-sm text-gray-200">
