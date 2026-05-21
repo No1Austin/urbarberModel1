@@ -11,6 +11,42 @@ const createToken = (userId) => {
   });
 };
 
+// Simple authentication middlewares used by routes below
+const protect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (!token) {
+      return res.status(401).json({ message: 'Not authorized, token missing' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ message: 'Not authorized, user not found' });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Not authorized, token failed' });
+  }
+};
+
+const adminOnly = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Not authorized' });
+  }
+
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  next();
+};
+
 router.post("/register", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
@@ -96,6 +132,39 @@ router.post("/login", async (req, res) => {
     res.status(500).json({
       message: "Login error",
       error: error.message
+    });
+  }
+
+  
+});
+
+router.patch("/users/:id/redeem-points", protect, adminOnly, async (req, res) => {
+  try {
+    const pointsToRemove = Number(req.body.points || 30);
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    if ((user.points || 0) < pointsToRemove) {
+      return res.status(400).json({
+        message: "Customer does not have enough points.",
+      });
+    }
+
+    user.points -= pointsToRemove;
+    await user.save();
+
+    res.json({
+      message: "Points redeemed successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Could not redeem points",
+      error: error.message,
     });
   }
 });

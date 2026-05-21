@@ -1012,7 +1012,7 @@ export default function App() {
         {/* =====================================================
             ADMIN DASHBOARD
         ===================================================== */}
-        {user?.role === "admin" && <AdminDashboard onUserUpdate={setUser} />}
+        {user?.role === "admin" && <AdminDashboard/>}
 
         {/* =====================================================
             CONTACT SECTION
