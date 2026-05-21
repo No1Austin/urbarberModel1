@@ -2,12 +2,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import "./App.css";
 
+// =========================================================
+// IMPORTED PAGES / COMPONENTS
+// =========================================================
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
+// =========================================================
+// LOGO COMPONENT
+// =========================================================
 function UrbarberLogo({ className = "w-10 h-10" }) {
   return (
     <img
@@ -18,31 +24,94 @@ function UrbarberLogo({ className = "w-10 h-10" }) {
   );
 }
 
+// =========================================================
+// STATUS LABEL HELPER
+// This controls how booking statuses appear to customers.
+// Change the words/colors here if you want different labels.
+// =========================================================
+function BookingStatusBadge({ status }) {
+  const normalizedStatus = status || "pending";
+
+  const statusStyles = {
+    approved: "bg-emerald-700 text-white",
+    cancelled: "bg-red-700 text-white",
+    completed: "bg-blue-700 text-white",
+    rebooked: "bg-yellow-600 text-black",
+    pending: "bg-orange-600 text-white",
+  };
+
+  const statusLabels = {
+    approved: "✅ Booking Approved",
+    cancelled: "❌ Booking Cancelled",
+    completed: "🏁 Completed",
+    rebooked: "🔄 Rebooked",
+    pending: "⏳ Waiting for Admin Approval",
+  };
+
+  return (
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium ${
+        statusStyles[normalizedStatus] || statusStyles.pending
+      }`}
+    >
+      {statusLabels[normalizedStatus] || statusLabels.pending}
+    </span>
+  );
+}
+
+// =========================================================
+// MAIN APP COMPONENT
+// =========================================================
 export default function App() {
+  // =========================================================
+  // PASSWORD RESET TOKEN CHECK
+  // If URL is /reset-password/:token, show reset password page.
+  // =========================================================
   const resetToken = window.location.pathname.startsWith("/reset-password/")
     ? window.location.pathname.split("/reset-password/")[1]
     : null;
 
+  // =========================================================
+  // API URLS
+  // Change these if your backend URL changes.
+  // =========================================================
   const AUTH_API_URL = "https://urbarbermodel1.onrender.com/api/auth";
   const BOOKINGS_API_URL = "https://urbarbermodel1.onrender.com/api/bookings";
 
+  // =========================================================
+  // USER STATE
+  // Keeps user logged in after refresh using localStorage.
+  // =========================================================
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
+  // =========================================================
+  // UI MODAL / PANEL STATES
+  // =========================================================
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
 
+  // =========================================================
+  // LOADING / NOTICE STATES
+  // =========================================================
   const [authMode, setAuthMode] = useState("login");
   const [authLoading, setAuthLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState(null);
 
+  // =========================================================
+  // CUSTOMER BOOKING HISTORY
+  // This is fetched from MongoDB/backend, not old localStorage.
+  // =========================================================
   const [bookingHistory, setBookingHistory] = useState([]);
 
+  // =========================================================
+  // AUTH FORM STATE
+  // =========================================================
   const [authForm, setAuthForm] = useState({
     name: "",
     email: "",
@@ -50,6 +119,9 @@ export default function App() {
     password: "",
   });
 
+  // =========================================================
+  // CUSTOMER BOOKING FORM STATE
+  // =========================================================
   const [form, setForm] = useState({
     fullName: "",
     gender: "Male",
@@ -64,6 +136,10 @@ export default function App() {
     depositOption: "skip",
   });
 
+  // =========================================================
+  // PRICING SETTINGS
+  // Change prices here.
+  // =========================================================
   const basePrice = 25;
   const homeExtra = 10;
 
@@ -74,10 +150,16 @@ export default function App() {
 
   const depositAmount = useMemo(() => Math.round(price * 0.1), [price]);
 
+  // =========================================================
+  // CUSTOMER WALLET / POINTS
+  // =========================================================
   const points = user?.points || 0;
   const pointsNeeded = Math.max(30 - points, 0);
   const lastBooking = bookingHistory[0];
 
+  // =========================================================
+  // BOOKING FORM VALIDATION
+  // =========================================================
   const valid = useMemo(() => {
     return Boolean(
       form.fullName.trim() &&
@@ -89,6 +171,10 @@ export default function App() {
     );
   }, [form]);
 
+  // =========================================================
+  // SERVICES LIST
+  // Add/remove services here.
+  // =========================================================
   const SERVICES = [
     {
       name: "Standard Cut",
@@ -110,10 +196,15 @@ export default function App() {
     },
   ];
 
+  // =========================================================
+  // FETCH CUSTOMER BOOKINGS
+  // Loads customer bookings and refreshes every 30 seconds.
+  // This lets customers see status changes after admin approval/cancel.
+  // =========================================================
   useEffect(() => {
-    const fetchBookings = async () => {
-      if (!user) return;
+    if (!user) return;
 
+    const fetchBookings = async () => {
       try {
         const token = localStorage.getItem("token");
 
@@ -130,13 +221,23 @@ export default function App() {
     };
 
     fetchBookings();
+
+    const interval = setInterval(fetchBookings, 30000);
+
+    return () => clearInterval(interval);
   }, [user]);
 
+  // =========================================================
+  // AUTH INPUT CHANGE HANDLER
+  // =========================================================
   const handleAuthChange = (e) => {
     const { name, value } = e.target;
     setAuthForm((f) => ({ ...f, [name]: value }));
   };
 
+  // =========================================================
+  // LOGIN / REGISTER SUBMIT
+  // =========================================================
   const handleAuthSubmit = async () => {
     setNotice(null);
     setAuthLoading(true);
@@ -180,14 +281,21 @@ export default function App() {
     }
   };
 
+  // =========================================================
+  // LOGOUT
+  // =========================================================
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+    setBookingHistory([]);
     setShowWallet(false);
     setNotice({ type: "info", message: "You have been logged out." });
   };
 
+  // =========================================================
+  // BOOKING FORM CHANGE HANDLER
+  // =========================================================
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -197,6 +305,11 @@ export default function App() {
     }));
   };
 
+  // =========================================================
+  // CUSTOMER BOOKING SUBMIT
+  // Creates a pending booking in MongoDB.
+  // Email should NOT send here. Email sends after admin approval.
+  // =========================================================
   const handleBook = async () => {
     setNotice(null);
 
@@ -253,11 +366,19 @@ export default function App() {
         throw new Error(data.message || "Booking failed");
       }
 
-      setBookingHistory((prev) => [data.booking || data, ...prev]);
+      // Add the newly created booking immediately to the customer's dashboard.
+      const newBooking = data.booking || data;
+      setBookingHistory((prev) => [newBooking, ...prev]);
+
+      // Popup requested by user.
+      alert(
+        "Booking submitted. Waiting for admin approval. Chat admin on WhatsApp for faster approval."
+      );
 
       setNotice({
         type: "success",
-        message: "Booking request submitted. Waiting for admin approval.",
+        message:
+          "Booking submitted. Waiting for admin approval. Chat admin on WhatsApp for faster approval.",
       });
 
       setForm((f) => ({ ...f, notes: "" }));
@@ -273,6 +394,9 @@ export default function App() {
     }
   };
 
+  // =========================================================
+  // NOTICE BANNER COMPONENT
+  // =========================================================
   const NoticeBanner = ({ notice }) => {
     if (!notice) return null;
 
@@ -293,12 +417,18 @@ export default function App() {
     );
   };
 
+  // =========================================================
+  // RESET PASSWORD PAGE
+  // =========================================================
   if (resetToken) {
     return <ResetPassword token={resetToken} />;
   }
 
   return (
     <div className="w-full min-h-screen bg-[#3b2f2f] text-white flex flex-col overflow-x-hidden">
+      {/* =====================================================
+          HEADER / NAVIGATION
+      ===================================================== */}
       <header className="sticky top-0 z-40 backdrop-blur bg-white/90 border-b border-neutral-200">
         <div className="w-full px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -352,6 +482,9 @@ export default function App() {
         </div>
       </header>
 
+      {/* =====================================================
+          CUSTOMER WALLET POPUP
+      ===================================================== */}
       {showWallet && user && (
         <div className="fixed top-20 right-4 z-50 w-[360px] max-w-[92vw] rounded-3xl bg-[#5c4646] border border-[#7a6161] shadow-xl p-5">
           <div className="flex items-center justify-between">
@@ -359,6 +492,7 @@ export default function App() {
             <button onClick={() => setShowWallet(false)}>✕</button>
           </div>
 
+          {/* Wallet points */}
           <div className="mt-4 p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161]">
             <div className="text-sm text-gray-300">Loyalty Points</div>
             <div className="text-4xl font-extrabold mt-1">{points}</div>
@@ -380,68 +514,39 @@ export default function App() {
             </button>
           </div>
 
+          {/* Last booking with status */}
           <div className="mt-4 p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161]">
-  <div className="text-sm text-gray-300">Last Booking</div>
+            <div className="text-sm text-gray-300">Last Booking</div>
 
-  {lastBooking ? (
-    <div className="text-sm mt-2">
+            {lastBooking ? (
+              <div className="text-sm mt-2">
+                <div className="font-medium">{lastBooking.service}</div>
+                <div className="text-gray-300">
+                  {lastBooking.date} at {lastBooking.time}
+                </div>
 
-      {/* Service */}
-      <div className="font-medium">
-        {lastBooking.service}
-      </div>
+                <div className="mt-3">
+                  <BookingStatusBadge status={lastBooking.status} />
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm mt-1">No booking yet</div>
+            )}
+          </div>
 
-      {/* Date + Time */}
-      <div className="text-gray-300">
-        {lastBooking.date} at {lastBooking.time}
-      </div>
-
-      {/* Status */}
-      <div className="mt-3">
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium
-          ${
-            lastBooking.status === "approved"
-              ? "bg-emerald-700 text-white"
-              : lastBooking.status === "cancelled"
-              ? "bg-red-700 text-white"
-              : lastBooking.status === "completed"
-              ? "bg-blue-700 text-white"
-              : lastBooking.status === "rebooked"
-              ? "bg-yellow-600 text-black"
-              : "bg-orange-600 text-white"
-          }`}
-        >
-          {lastBooking.status === "approved"
-            ? "✅ Booking Approved"
-            : lastBooking.status === "cancelled"
-            ? "❌ Booking Cancelled"
-            : lastBooking.status === "completed"
-            ? "🏁 Completed"
-            : lastBooking.status === "rebooked"
-            ? "🔄 Rebooked"
-            : "⏳ Waiting for Admin Approval"}
-        </span>
-      </div>
-
-    </div>
-  ) : (
-    <div className="text-sm mt-1">
-      No booking yet
-    </div>
-  )}
-</div>
-
-<button
-  onClick={handleLogout}
-  className="mt-4 w-full px-4 py-2 rounded-2xl border border-[#7a6161] text-sm"
->
-  Logout
-</button>
-  </div>
+          <button
+            onClick={handleLogout}
+            className="mt-4 w-full px-4 py-2 rounded-2xl border border-[#7a6161] text-sm"
+          >
+            Logout
+          </button>
+        </div>
       )}
 
       <main className="w-full">
+        {/* =====================================================
+            HERO SECTION
+        ===================================================== */}
         <section className="w-full px-6 py-16 grid md:grid-cols-2 gap-10 items-center">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
@@ -492,6 +597,9 @@ export default function App() {
           </div>
         </section>
 
+        {/* =====================================================
+            SERVICES SECTION
+        ===================================================== */}
         <section
           id="services"
           className="w-full bg-[#4a3a3a] border-y border-[#6b5555]"
@@ -558,6 +666,9 @@ export default function App() {
           </div>
         </section>
 
+        {/* =====================================================
+            PRICING SECTION
+        ===================================================== */}
         <section id="pricing" className="w-full px-6 py-14">
           <h2 className="text-2xl font-bold">Pricing</h2>
 
@@ -594,6 +705,9 @@ export default function App() {
           </div>
         </section>
 
+        {/* =====================================================
+            BOOKING SECTION
+        ===================================================== */}
         <section
           id="booking"
           className="w-full bg-[#4a3a3a] border-y border-[#6b5555]"
@@ -607,6 +721,9 @@ export default function App() {
             </p>
 
             {!user ? (
+              // =================================================
+              // LOGIN / REGISTER BOX
+              // =================================================
               <div className="mt-6 p-6 rounded-3xl border border-[#7a6161] shadow-lg bg-[#5c4646] max-w-xl">
                 <h3 className="text-xl font-bold">
                   {authMode === "login" ? "Login to book" : "Create an account"}
@@ -689,6 +806,9 @@ export default function App() {
                 </div>
               </div>
             ) : (
+              // =================================================
+              // LOGGED-IN BOOKING FORM + CUSTOMER DASHBOARD
+              // =================================================
               <>
                 <p className="mt-4 text-sm text-emerald-200">
                   Logged in as {user.name}
@@ -698,6 +818,7 @@ export default function App() {
                 </p>
 
                 <div className="mt-6 grid lg:grid-cols-2 gap-6">
+                  {/* Booking form */}
                   <div className="p-6 rounded-3xl border border-[#7a6161] bg-[#5c4646]">
                     <div className="grid gap-4">
                       <label className="grid gap-1 text-sm">
@@ -844,10 +965,9 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* Customer dashboard preview */}
                   <div className="p-6 rounded-3xl border border-[#7a6161] bg-[#5c4646]">
-                    <h3 className="font-semibold">
-                      Customer Dashboard Preview
-                    </h3>
+                    <h3 className="font-semibold">Customer Dashboard Preview</h3>
 
                     <div className="mt-4 grid gap-4">
                       <div className="p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161]">
@@ -857,45 +977,25 @@ export default function App() {
                         <div className="text-3xl font-bold">{points}</div>
                       </div>
 
+                      {/* Last booking status card */}
                       <div className="p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161]">
-                        <div className="text-sm text-gray-300">
-                          Last Booking
-                        </div>
-                        <div className="text-sm mt-2">
-  <div className="font-medium">
-    {lastBooking.service}
-  </div>
+                        <div className="text-sm text-gray-300">Last Booking</div>
 
-  <div className="text-gray-300">
-    {lastBooking.date} at {lastBooking.time}
-  </div>
-
-  <div className="mt-3">
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-medium ${
-        lastBooking.status === "approved"
-          ? "bg-emerald-700 text-white"
-          : lastBooking.status === "cancelled"
-          ? "bg-red-700 text-white"
-          : lastBooking.status === "completed"
-          ? "bg-blue-700 text-white"
-          : lastBooking.status === "rebooked"
-          ? "bg-yellow-600 text-black"
-          : "bg-orange-600 text-white"
-      }`}
-    >
-      {lastBooking.status === "approved"
-        ? "✅ Booking Approved"
-        : lastBooking.status === "cancelled"
-        ? "❌ Booking Cancelled"
-        : lastBooking.status === "completed"
-        ? "🏁 Completed"
-        : lastBooking.status === "rebooked"
-        ? "🔄 Rebooked"
-        : "⏳ Waiting for Admin Approval"}
-    </span>
-  </div>
-</div>
+                        {lastBooking ? (
+                          <div className="text-sm mt-2">
+                            <div className="font-medium">
+                              {lastBooking.service}
+                            </div>
+                            <div className="text-gray-300">
+                              {lastBooking.date} at {lastBooking.time}
+                            </div>
+                            <div className="mt-3">
+                              <BookingStatusBadge status={lastBooking.status} />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-sm mt-1">No booking yet</div>
+                        )}
                       </div>
 
                       <div className="p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161] text-sm text-gray-200">
@@ -909,8 +1009,14 @@ export default function App() {
           </div>
         </section>
 
+        {/* =====================================================
+            ADMIN DASHBOARD
+        ===================================================== */}
         {user?.role === "admin" && <AdminDashboard onUserUpdate={setUser} />}
 
+        {/* =====================================================
+            CONTACT SECTION
+        ===================================================== */}
         <section id="contact" className="w-full px-6 py-14">
           <h2 className="text-2xl font-bold">Contact</h2>
 
@@ -938,6 +1044,9 @@ export default function App() {
         </section>
       </main>
 
+      {/* =====================================================
+          WHATSAPP FLOATING BUTTON
+      ===================================================== */}
       <a
         href="https://wa.me/14375661645"
         target="_blank"
@@ -947,6 +1056,9 @@ export default function App() {
         WhatsApp Support
       </a>
 
+      {/* =====================================================
+          AUTH MODALS
+      ===================================================== */}
       {showLogin && (
         <Login
           setUser={setUser}
@@ -964,6 +1076,9 @@ export default function App() {
         <ForgotPassword setShowForgotPassword={setShowForgotPassword} />
       )}
 
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
       <footer className="w-full border-t border-[#6b5555] bg-[#4a3a3a] m-0 p-0">
         <div className="w-full px-6 py-3 text-sm text-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
