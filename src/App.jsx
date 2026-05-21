@@ -381,24 +381,64 @@ export default function App() {
           </div>
 
           <div className="mt-4 p-4 rounded-2xl bg-[#3b2f2f] border border-[#7a6161]">
-            <div className="text-sm text-gray-300">Last Booking</div>
-            {lastBooking ? (
-              <div className="text-sm mt-1">
-                {lastBooking.service} — {lastBooking.date} at{" "}
-                {lastBooking.time}
-              </div>
-            ) : (
-              <div className="text-sm mt-1">No booking yet</div>
-            )}
-          </div>
+  <div className="text-sm text-gray-300">Last Booking</div>
 
-          <button
-            onClick={handleLogout}
-            className="mt-4 w-full px-4 py-2 rounded-2xl border border-[#7a6161] text-sm"
-          >
-            Logout
-          </button>
-        </div>
+  {lastBooking ? (
+    <div className="text-sm mt-2">
+
+      {/* Service */}
+      <div className="font-medium">
+        {lastBooking.service}
+      </div>
+
+      {/* Date + Time */}
+      <div className="text-gray-300">
+        {lastBooking.date} at {lastBooking.time}
+      </div>
+
+      {/* Status */}
+      <div className="mt-3">
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium
+          ${
+            lastBooking.status === "approved"
+              ? "bg-emerald-700 text-white"
+              : lastBooking.status === "cancelled"
+              ? "bg-red-700 text-white"
+              : lastBooking.status === "completed"
+              ? "bg-blue-700 text-white"
+              : lastBooking.status === "rebooked"
+              ? "bg-yellow-600 text-black"
+              : "bg-orange-600 text-white"
+          }`}
+        >
+          {lastBooking.status === "approved"
+            ? "✅ Booking Approved"
+            : lastBooking.status === "cancelled"
+            ? "❌ Booking Cancelled"
+            : lastBooking.status === "completed"
+            ? "🏁 Completed"
+            : lastBooking.status === "rebooked"
+            ? "🔄 Rebooked"
+            : "⏳ Waiting for Admin Approval"}
+        </span>
+      </div>
+
+    </div>
+  ) : (
+    <div className="text-sm mt-1">
+      No booking yet
+    </div>
+  )}
+</div>
+
+<button
+  onClick={handleLogout}
+  className="mt-4 w-full px-4 py-2 rounded-2xl border border-[#7a6161] text-sm"
+>
+  Logout
+</button>
+  </div>
       )}
 
       <main className="w-full">
