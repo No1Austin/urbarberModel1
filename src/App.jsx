@@ -588,13 +588,13 @@ export default function App() {
             </div>
           </div>
 
-          <div className="rounded-3xl overflow-hidden shadow-lg border border-[#7a6161] min-h-[420px]">
-            <img
-              src="/barbing.jpg"
-              alt="Barber at work"
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <div className="rounded-3xl overflow-hidden shadow-lg border border-[#7a6161] h-[320px] md:h-[420px]">
+  <img
+    src="/barbing.jpg"
+    alt="Barber at work"
+    className="w-full h-full object-cover object-center"
+  />
+</div>
         </section>
 
         {/* =====================================================
