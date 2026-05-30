@@ -222,7 +222,7 @@ export default function App() {
 
     fetchBookings();
 
-    const interval = setInterval(fetchBookings, 30000);
+   const interval = setInterval(fetchBookings, 120000);
 
     return () => clearInterval(interval);
   }, [user]);
