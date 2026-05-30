@@ -368,7 +368,18 @@ export default function App() {
 
       // Add the newly created booking immediately to the customer's dashboard.
       const newBooking = data.booking || data;
-      setBookingHistory((prev) => [newBooking, ...prev]);
+      const token = localStorage.getItem("token");
+
+const refreshed = await axios.get(
+  `${BOOKINGS_API_URL}/my-bookings`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
+setBookingHistory(refreshed.data);
 
       // Popup requested by user.
       alert(
